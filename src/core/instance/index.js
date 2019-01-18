@@ -14,7 +14,7 @@ function Vue (options) {
   this._init(options)
 }
 
-initMixin(Vue) //初始化？
+initMixin(Vue) //初始化 2019年01月18日18:22:38
 stateMixin(Vue)
 eventsMixin(Vue)
 lifecycleMixin(Vue)
