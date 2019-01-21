@@ -5,6 +5,10 @@ import { warn } from './debug'
 import { inBrowser, inWeex } from './env'
 import { isPromise } from 'shared/util'
 
+/*
+  这个方法先调用用户配置的 errorHandler 方法输出, 
+  如果没有配置, 在开发测试环境调用warn输出, 在非浏览器环境用throw抛出错误
+*/
 export function handleError (err: Error, vm: any, info: string) {
   if (vm) {
     let cur = vm

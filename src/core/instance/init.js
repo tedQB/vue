@@ -12,6 +12,9 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+
+/*initMixin就做了一件事情，在Vue的原型上增加_init方法，
+  构造Vue实例的时候会调用这个_init方法来初始化Vue实例*/
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
@@ -27,6 +30,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // a flag to avoid this being observed
+  /*一个防止vm实例自身被观察的标志位*/
     vm._isVue = true
     // merge options
     if (options && options._isComponent) {
@@ -70,7 +74,7 @@ export function initMixin (Vue: Class<Component>) {
     }
   }
 }
-
+//初始化各种内部预定并非暴露在外的API属性参数，parent,parentVnode,propsData,listeners
 export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
   const opts = vm.$options = Object.create(vm.constructor.options)
   // doing this because it's faster than dynamic enumeration.

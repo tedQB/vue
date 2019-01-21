@@ -1,18 +1,24 @@
 /* @flow */
 
-// can we use __proto__?
+// can we use __proto__? 有些浏览器不能让你明目张胆的使用 __proto__
 export const hasProto = '__proto__' in {}
 
 // Browser environment sniffing
+//利用 window 来检测浏览器环境
 export const inBrowser = typeof window !== 'undefined'
 export const inWeex = typeof WXEnvironment !== 'undefined' && !!WXEnvironment.platform
 export const weexPlatform = inWeex && WXEnvironment.platform.toLowerCase()
 export const UA = inBrowser && window.navigator.userAgent.toLowerCase()
+//IE的内核是trident,msie edge
 export const isIE = UA && /msie|trident/.test(UA)
 export const isIE9 = UA && UA.indexOf('msie 9.0') > 0
 export const isEdge = UA && UA.indexOf('edge/') > 0
+
+//判断 android ios
 export const isAndroid = (UA && UA.indexOf('android') > 0) || (weexPlatform === 'android')
 export const isIOS = (UA && /iphone|ipad|ipod|ios/.test(UA)) || (weexPlatform === 'ios')
+
+//判断chrome
 export const isChrome = UA && /chrome\/\d+/.test(UA) && !isEdge
 export const isPhantomJS = UA && /phantomjs/.test(UA)
 
@@ -35,6 +41,7 @@ if (inBrowser) {
 
 // this needs to be lazy-evaled because vue may be required before
 // vue-server-renderer can set VUE_ENV
+// 这个需求需要延迟加载, 因为在 vue服务器渲染设置VUE_ENV环境之前, 需要先加载vue
 let _isServer
 export const isServerRendering = () => {
   if (_isServer === undefined) {
@@ -42,6 +49,8 @@ export const isServerRendering = () => {
     if (!inBrowser && !inWeex && typeof global !== 'undefined') {
       // detect presence of vue-server-renderer and avoid
       // Webpack shimming the process
+
+      //检测 vue的服务器渲染是否存在, 而且避免webpack去填充process
       _isServer = global['process'] && global['process'].env.VUE_ENV === 'server'
     } else {
       _isServer = false
@@ -50,14 +59,18 @@ export const isServerRendering = () => {
   return _isServer
 }
 
-// detect devtools
+// detect devtools 输出vue的工具方法的全局钩子
 export const devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
 
 /* istanbul ignore next */
+//这里判断 函数是否是系统函数, 比如 Function Object ExpReg window document 等等, 这些函数应该在webkit里用c++实现
+//这样可以区分 Symbol是系统函数, 还是用户自定义了一个Symbol, 下面这个函数可以看出来
 export function isNative (Ctor: any): boolean {
   return typeof Ctor === 'function' && /native code/.test(Ctor.toString())
 }
 
+//这里使用了ES6的Reflect方法, 使用这个对象的目的是, 为了保证访问的是系统的原型方法, 
+// ownKeys 保证key的输出顺序, 先数组 后字符串
 export const hasSymbol =
   typeof Symbol !== 'undefined' && isNative(Symbol) &&
   typeof Reflect !== 'undefined' && isNative(Reflect.ownKeys)
