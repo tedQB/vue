@@ -10,6 +10,9 @@ export const unicodeLetters = 'a-zA-Z\u00B7\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u03
 
 /**
  * Check if a string starts with $ or _
+ * charcodeAt是一个字符的 unicode编码, 但是像 0x24 (代表的是 $ )  0x5f (代表的是 _ ) 因为是字符, 先存着ascii编码中, 所以用ascii转换
+    
+   $ _ 作为保留字, 这里判断输入的字符是否是vue可能使用的关键字, 比如 $set _bind 等等
  */
 export function isReserved (str: string): boolean {
   const c = (str + '').charCodeAt(0)
@@ -18,6 +21,7 @@ export function isReserved (str: string): boolean {
 
 /**
  * Define a property.
+ * 这里简单的定义一个对象, 定义它的值 是否能在for...in循环中遍历出来或在Object.keys中列举出来。
  */
 export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
   Object.defineProperty(obj, key, {
@@ -30,6 +34,13 @@ export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
 
 /**
  * Parse simple path.
+ * 解析简单的路径, 比如 o.corp.$1, 是合法的, 不在正则 bailRE中
+   而 o.corp.names[0]是不合法的, 会被直接return, 因为对象才能被defineProperty, 数组是不能监听的.
+　　使用
+　　var path = parsePath('o.corp.$1');
+　　var obj = { o:{ corp: { $1: 'haha' } } }
+   path( obj )  ==> 'haha'
+ * 
  */
 const bailRE = new RegExp(`[^${unicodeLetters}.$_\\d]`)
 export function parsePath (path: string): any {

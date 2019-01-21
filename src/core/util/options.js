@@ -12,13 +12,13 @@ import {
 } from 'shared/constants'
 
 import {
-  extend,
-  hasOwn,
-  camelize,
-  toRawType,
-  capitalize,
-  isBuiltInTag,
-  isPlainObject
+  extend,  //Mix properties into target object.
+  hasOwn,  //Check whether an object has the property.
+  camelize, // 大写带有连字符分割的字符串 
+  toRawType, //Get the raw type string of a value, e.g., [object Object].
+  capitalize, //大写字符串
+  isBuiltInTag, // Check if a tag is a built-in tag.
+  isPlainObject // boolean
 } from 'shared/util'
 
 /**
