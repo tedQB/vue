@@ -44,7 +44,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 /**
- * Helper that recursively merges two data objects together.
+ * Helper that recursively merges two data objects together.ecursively merges two data objects together.
  */
 function mergeData (to: Object, from: ?Object): Object {
   if (!from) return to
