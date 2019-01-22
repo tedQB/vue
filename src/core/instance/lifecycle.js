@@ -330,7 +330,7 @@ export function callHook (vm: Component, hook: string) {
     }
   }
   if (vm._hasHookEvent) {
-    vm.$emit('hook:' + hook)
+    vm.$emit('hook:' + hook) //添加hock事件
   }
   popTarget()
 }

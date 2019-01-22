@@ -78,6 +78,7 @@ function initProps (vm: Component, propsOptions: Object) {
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
+      //保留字不能作为组件的props
       if (isReservedAttribute(hyphenatedKey) ||
           config.isReservedAttr(hyphenatedKey)) {
         warn(

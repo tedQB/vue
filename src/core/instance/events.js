@@ -49,6 +49,18 @@ export function updateComponentListeners (
   target = undefined
 }
 
+/* 
+    demo
+		vm.$on('test',function(msg){
+			console.log(msg)
+		})
+		var d1 = ()=>{  console.log('sss'); }
+		vm.$on('test',d1)
+		vm.$off()
+		vm.$emit('test','h144')
+
+*/
+
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
@@ -67,7 +79,7 @@ export function eventsMixin (Vue: Class<Component>) {
     }
     return vm
   }
-
+  //监听一个自定义事件，但是只触发一次，在第一次触发之后移除监听器。
   Vue.prototype.$once = function (event: string, fn: Function): Component {
     const vm: Component = this
     function on () {
@@ -78,15 +90,15 @@ export function eventsMixin (Vue: Class<Component>) {
     vm.$on(event, on)
     return vm
   }
-
+ //移除自定义事件监听器。
   Vue.prototype.$off = function (event?: string | Array<string>, fn?: Function): Component {
     const vm: Component = this
-    // all
+    //如果没有提供参数，则移除所有的事件监听器；
     if (!arguments.length) {
       vm._events = Object.create(null)
       return vm
     }
-    // array of events
+    // array of events  如果只提供了事件，则移除该事件所有的监听器；
     if (Array.isArray(event)) {
       for (let i = 0, l = event.length; i < l; i++) {
         vm.$off(event[i], fn)
@@ -102,7 +114,7 @@ export function eventsMixin (Vue: Class<Component>) {
       vm._events[event] = null
       return vm
     }
-    // specific handler
+    // specific handler如果同时提供了事件与回调，则只移除这个回调的监听器。
     let cb
     let i = cbs.length
     while (i--) {
@@ -115,6 +127,7 @@ export function eventsMixin (Vue: Class<Component>) {
     return vm
   }
 
+  //从vm._events取出从vm.prototyope.$on 里保存在vm._events里的注册的事件。
   Vue.prototype.$emit = function (event: string): Component {
     const vm: Component = this
     if (process.env.NODE_ENV !== 'production') {
@@ -129,8 +142,8 @@ export function eventsMixin (Vue: Class<Component>) {
         )
       }
     }
-    let cbs = vm._events[event]
-    if (cbs) {
+    let cbs = vm._events[event] //取注册事件
+    if (cbs) { 
       cbs = cbs.length > 1 ? toArray(cbs) : cbs
       const args = toArray(arguments, 1)
       const info = `event handler for "${event}"`

@@ -4,6 +4,8 @@ import { hasOwn } from 'shared/util'
 import { warn, hasSymbol } from '../util/index'
 import { defineReactive, toggleObserving } from '../observer/index'
 
+//依赖注入功能实现可以参考/
+//https://blog.csdn.net/chrislianghonghui/article/details/84787365
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
