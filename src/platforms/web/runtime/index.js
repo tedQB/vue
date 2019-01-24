@@ -29,6 +29,21 @@ Vue.config.isUnknownElement = isUnknownElement
 // install platform runtime directives & components
 extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
+/* now ->
+  Vue.options = {
+    components: {
+      KeepAlive,
+      Transition,
+      TransitionGroup
+    },
+    directives: {
+      model,
+      show
+    },
+    filters: Object.create(null),
+    _base: Vue
+  }
+*/
 
 // install platform patch function
 Vue.prototype.__patch__ = inBrowser ? patch : noop

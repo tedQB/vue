@@ -39,11 +39,36 @@ export function initMixin (Vue: Class<Component>) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
         vm
       )
+/*以上代码
+    vm.$options = mergeOptions(
+    {
+      components: {
+        KeepAlive
+        Transition,
+        TransitionGroup
+      },
+      directives:{
+        model,
+        show
+      },
+      filters: Object.create(null),
+      _base: Vue
+    },
+    {
+      el: '#app',
+      data: {
+        test: 1
+      }
+    },
+    vm
+    )
+*/
     }
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
@@ -54,13 +79,28 @@ export function initMixin (Vue: Class<Component>) {
     // expose real self
     vm._self = vm
     initLifecycle(vm)
+    // vm.$parent vm.$root vm.$children vm.$ref
     initEvents(vm)
+    //添加实例方法/事件 updateComponentListeners(vm, listeners)
     initRender(vm)
+    /*
+      vm.$slots vm.$scopedSlots vm.$createElement
+    */
     callHook(vm, 'beforeCreate')
+    //vm实例生命周期生命设置为beforeCreate
     initInjections(vm) // resolve injections before data/props
+    //实现子组件的依赖注入功能
+    //详见https://cn.vuejs.org/v2/api/#provide-inject
     initState(vm)
+    /*
+      绑定methods,初始化opts.data，初始化opts.computed 
+      初始化opts.watch
+    */
     initProvide(vm) // resolve provide after data/props
+    //提供父组件依赖注入功能
     callHook(vm, 'created')
+    //vm实例生命周期生命为create
+
 
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
@@ -104,6 +144,7 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
       // need to resolve new options.
       Ctor.superOptions = superOptions
       // check if there are any late-modified/attached options (#4976)
+      // 
       const modifiedOptions = resolveModifiedOptions(Ctor)
       // update base extend options
       if (modifiedOptions) {

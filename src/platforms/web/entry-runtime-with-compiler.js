@@ -15,6 +15,7 @@ const idToTemplate = cached(id => {
 })
 
 const mount = Vue.prototype.$mount
+//重写Vue mount原型方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -61,7 +62,15 @@ Vue.prototype.$mount = function (
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
+/*  compileToFunctions
+    1将 html 模板解析成抽象语法树(AST)。
+    2对 AST 做优化处理。
+    3 根据 AST 生成 render 函数。
 
+    AST详见 http://www.cnblogs.com/iovec/p/vue_03.html
+    
+*/
+      
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -85,6 +94,10 @@ Vue.prototype.$mount = function (
 /**
  * Get outerHTML of elements, taking care
  * of SVG elements in IE as well.
+{ el: '#index' }
+{ el: document.querySelector('#index') }
+{ template: '#index' }
+{ template: '<div>{{msg}}</div>'}
  */
 function getOuterHTML (el: Element): string {
   if (el.outerHTML) {
@@ -97,5 +110,18 @@ function getOuterHTML (el: Element): string {
 }
 
 Vue.compile = compileToFunctions
+/* compile方法
+
+  var res = Vue.compile('<div><span>{{ msg }}</span></div>')
+
+  new Vue({
+    data: {
+      msg: 'hello'
+    },
+    render: res.render,
+    staticRenderFns: res.staticRenderFns
+  })
+*/
+
 
 export default Vue

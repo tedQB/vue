@@ -291,10 +291,7 @@ export function validateComponentName (name: string) {
   }
 }
 
-/**
- * Ensure all props option syntax are normalized into the
- * Object-based format.
- */
+
 function normalizeProps (options: Object, vm: ?Component) {
   const props = options.props
   if (!props) return
@@ -305,7 +302,7 @@ function normalizeProps (options: Object, vm: ?Component) {
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
-        name = camelize(val)
+        name = camelize(val) // do-name: doName
         res[name] = { type: null }
       } else if (process.env.NODE_ENV !== 'production') {
         warn('props must be strings when using array syntax.')
@@ -331,6 +328,28 @@ function normalizeProps (options: Object, vm: ?Component) {
 
 /**
  * Normalize all injections into Object-based format
+ * 提供一种父子组件传递数据的方式
+ * // 子组件
+    const ChildComponent = {
+      template: '<div>child component</div>',
+      created: function () {
+        // 这里的 data 是父组件注入进来的
+        console.log(this.data)
+      },
+      inject: ['data']
+    }
+
+    // 父组件
+    var vm = new Vue({
+      el: '#app',
+      // 向子组件提供数据
+      provide: {
+        data: 'test provide'
+      },
+      components: {
+        ChildComponent
+      }
+    })
  */
 function normalizeInject (options: Object, vm: ?Component) {
   const inject = options.inject
@@ -384,37 +403,130 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
 /**
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
+ * 
+ * 第一，这个函数将会产生一个新的对象；
+ * 第二，这个函数不仅仅在实例化对象(即_init方法中)的时候用到，
+ * 在继承(Vue.extend)中也有用到，
+ * 所以这个函数应该是一个用来合并两个选项对象为一个新对象的通用程序。
  */
-export function mergeOptions (
+export function mergeOptions ( 
   parent: Object,
   child: Object,
   vm?: Component
 ): Object {
   if (process.env.NODE_ENV !== 'production') {
-    checkComponents(child)
+    checkComponents(child) //只有警告childObjectkey是否为系统保留字
   }
 
   if (typeof child === 'function') {
     child = child.options
   }
 
-  normalizeProps(child, vm)
+  normalizeProps(child, vm) //规范化props
+/**
+* Ensure all props option syntax are normalized into the
+* Object-based format.
+* eg:
+* props: ["someData"]
+* props: {
+  someData:{
+    type: null
+  }
+}
+* props: {
+  someData1: Number,
+  someData2: {
+    type: String,
+    default: ''
+  }
+}
+props: {
+  someData1: {
+    type: Number
+  },
+someData2: {
+    type: String,
+      default: ''
+  }
+}
+规范化props
+*/
   normalizeInject(child, vm)
+/*
+规范化传递参数
+inject: {
+  data1,
+  d2: 'data2',
+  data3: { someProperty: 'someValue' }
+}
+=>
+inject: {
+  'data1': { from: 'data1' },
+  'd2': { from: 'data2' },
+  'data3': { from: 'data3', someProperty: 'someValue' }
+}
+*/
   normalizeDirectives(child)
+/*规范化指令参数
+  directives: {
+    test1: {
+      bind: function () {
+        console.log('v-test1')
+      }
+    },
+    test2: function () {
+      console.log('v-test2')
+    }
+  }
+  =>
+  directives: {
+    test1: {
+      bind: function () {
+        console.log('v-test1')
+      },
+      update:function(){ console.log('v-test1')}
+    },
+    test2: { 
+      bind:function(){ 
+         console.log('v-test2')
+      },
+      update:function(){ console.log('v-test2')}
+    }
+  }
 
+*/
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
   if (!child._base) {
+
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
+  /*
+    
+eg: var CompA = { ... }
+    // 在没有调用 `Vue.extend` 时候继承 CompA
+    var CompB = {
+      extends: CompA,
+      ...
+    }
+  */
     if (child.mixins) {
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
       }
     }
+  /*
+et: var mixin = {
+      created: function () { console.log(1) }
+    }
+    var vm = new Vue({
+      created: function () { console.log(2) },
+      mixins: [mixin]
+    })
+  */
   }
 
   const options = {}
