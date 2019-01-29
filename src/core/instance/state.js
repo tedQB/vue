@@ -60,7 +60,7 @@ export function initState (vm: Component) {
     initWatch(vm, opts.watch)
   }
 }
-
+//3b97dd
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
@@ -109,6 +109,15 @@ function initProps (vm: Component, propsOptions: Object) {
   }
   toggleObserving(true)
 }
+
+/* initData
+根据 vm.$options.data 选项获取真正想要的数据（注意：此时 vm.$options.data 是函数）
+校验得到的数据是否是一个纯对象
+检查数据对象 data 上的键是否与 props 对象上的键冲突
+检查 methods 对象上的键是否与 data 对象上的键冲突
+在 Vue 实例对象上添加代理访问数据对象的同名属性
+最后调用 observe 函数开启响应式之路
+*/
 
 function initData (vm: Component) {
   let data = vm.$options.data

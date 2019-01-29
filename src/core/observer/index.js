@@ -45,12 +45,22 @@ export class Observer {
     this.vmCount = 0
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { //支持__proto__属性
         protoAugment(value, arrayMethods)
-      } else {
+      } else { //不支持__proto__属性
         copyAugment(value, arrayMethods, arrayKeys)
       }
       this.observeArray(value)
+    /*
+    以上代码解决触发数组data响应的问题
+    const ins = new Vue({
+      data: {
+        arr: [1, 2]
+      }
+    })
+    ins.arr.push(3) // 能够触发响应
+    */
+
     } else {
       this.walk(value)
     }
@@ -70,6 +80,16 @@ export class Observer {
 
   /**
    * Observe a list of Array items.
+   * 解决递归方法数组响应的问题
+   * const ins = new Vue({
+      data: {
+        arr: [
+          [1, 2]
+        ]
+      }
+    })
+    ins.arr.push(1) // 能够触发响应
+    ins.arr[0].push(3) // 不能触发响应
    */
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
@@ -147,20 +167,39 @@ export function defineReactive (
   }
 
   // cater for pre-defined getter/setters
+  /*由于接下来会使用 Object.defineProperty 
+    函数重新定义属性的 setter/getter
+    重新定义的 set 和 get 方法中调用缓存的函数，
+    从而做到不影响属性的原有读写操作。
+  */
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+/*
+ 每一个数据字段都通过闭包引用着属于自己的 dep 常量。
+ 因为在 walk 函数中通过循环遍历了所有数据对象的属性，
+ 并调用 defineReactive 函数，
+ 所以每次调用 defineReactive 定义访问器属性时，
+ 该属性的 setter/getter 都闭包引用了一个属于自己的“筐”。
+*/
+  
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+/*
+  if判断，什么时候才进行依赖，存在Dep.target，即存在Watch,
+  Dep.target在dep.js里为全局变量。
+  watch初始化拿绑定data值时，watch实例.run的时候拿data值时候，
+  都会把全局变量 Dep.target变为this(watch)，
+  在watch里调用pushTarget(watch) Dep.target = watch
+*/
       if (Dep.target) {
-        dep.depend()
+        dep.depend() 
         if (childOb) {
           childOb.dep.depend()
           if (Array.isArray(value)) {
@@ -204,17 +243,32 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  //处理Array类型时利用数组splice方法给数组赋值，触发依赖收集
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
-    target.splice(key, 1, val)
+    target.splice(key, 1, val) //splice(index,length,val) length为1时，有val时候，可以替换数组元素
     return val
-  }
+  }//处理object类型时候
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
   const ob = (target: any).__ob__
+  //处理target为根对象时
   if (target._isVue || (ob && ob.vmCount)) {
+  /*
+    const data = {
+      obj: {
+        a: 1
+        __ob__ // ob2
+      },
+      __ob__ // ob1
+    }
+    new Vue({
+      data
+    })
+    Vue.set(data, 'someProperty', 'someVal')  //不能为根对象赋值
+  */
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
       'at runtime - declare it upfront in the data option.'
@@ -240,7 +294,7 @@ export function del (target: Array<any> | Object, key: any) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.splice(key, 1)
+    target.splice(key, 1) //splice(index,length,val) length为1时，无val时候，删除index下标节点
     return
   }
   const ob = (target: any).__ob__
@@ -274,3 +328,32 @@ function dependArray (value: Array<any>) {
     }
   }
 }
+/*数组递归依赖收集案例
+  <div id="demo">
+    {{arr}}
+  </div>
+
+  const ins = new Vue({
+    el: '#demo',
+    data: {
+      arr: [
+        { a: 1 }
+      ]
+    }
+  })
+  {
+  arr: [
+    { a: 1, __ob__ 我们将该 __ob__ 称为 ob2  },
+      __ob__ 
+    ]
+  } ins.$set(ins.$data.arr[0], 'b', 2)
+  
+  eg:
+  const ins = new Vue({
+  data: {
+      arr: [1, 2]
+    }
+  })
+
+ins.arr[0] = 3  // 不能触发响应
+*/

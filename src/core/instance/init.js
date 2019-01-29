@@ -84,7 +84,10 @@ export function initMixin (Vue: Class<Component>) {
     //添加实例方法/事件 updateComponentListeners(vm, listeners)
     initRender(vm)
     /*
-      vm.$slots vm.$scopedSlots vm.$createElement
+      vm.$vnode
+      vm.$slots
+      vm.$scopedSlots
+      vm.$createElement
     */
     callHook(vm, 'beforeCreate')
     //vm实例生命周期生命设置为beforeCreate

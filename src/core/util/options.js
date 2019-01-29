@@ -44,7 +44,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 /**
- * Helper that recursively merges two data objects together.ecursively merges two data objects together.
+ * Helper that recursively merges two data objects together.
+ * ecursively merges two data objects together.
  */
 function mergeData (to: Object, from: ?Object): Object {
   if (!from) return to
@@ -89,6 +90,17 @@ export function mergeDataOrFn (
     if (!parentVal) {
       return childVal
     }
+  /**
+    const Parent = Vue.extend({
+      data: function () {
+        return {
+          test: 1
+        }
+      }
+    })
+    const Child = Parent.extend({})
+   *  处理以上情况
+   */
     // when parentVal & childVal are both present,
     // we need to return a function that returns the
     // merged result of both functions... no need to
@@ -123,7 +135,20 @@ strats.data = function (
   childVal: any,
   vm?: Component
 ): ?Function {
-  if (!vm) {
+  if (!vm) { 
+    /*
+      无vm,如果沒有vm，则处理的是子组件
+      var Comp = Vue.extend({
+        props: ['msg'],
+        template: '<div>{{ msg }}</div>'
+      })
+
+      var vm = new Comp({
+        propsData: {
+          msg: 'hello'
+        }
+      })
+    */
     if (childVal && typeof childVal !== 'function') {
       process.env.NODE_ENV !== 'production' && warn(
         'The "data" option should be a function ' +
@@ -141,7 +166,30 @@ strats.data = function (
 }
 
 /**
- * Hooks and props are merged as arrays.
+ * Hooks and props are merged as arrays.const 
+ * 
+ * Parent = Vue.extend({
+    created: function () {
+      console.log('parentVal')
+    }
+  })
+
+  const Child = new Parent({
+    created: function () {
+      console.log('childVal')
+    }
+  })
+  
+[
+  created: function () {
+    console.log('parentVal')
+  },
+  created: function () {
+    console.log('childVal')
+  }
+]
+
+ * 
  */
 function mergeHook (
   parentVal: ?Array<Function>,
@@ -187,6 +235,14 @@ function mergeAssets (
   key: string
 ): Object {
   const res = Object.create(parentVal || null)
+  /*
+    parentVal 就是如上包含三个内置组件的对象
+    {
+      KeepAlive,
+      Transition,
+      TransitionGroup
+    }
+  */
   if (childVal) {
     process.env.NODE_ENV !== 'production' && assertObjectType(key, childVal, vm)
     return extend(res, childVal)
@@ -408,6 +464,12 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * 第二，这个函数不仅仅在实例化对象(即_init方法中)的时候用到，
  * 在继承(Vue.extend)中也有用到，
  * 所以这个函数应该是一个用来合并两个选项对象为一个新对象的通用程序。
+ * 
+ * 在mergeOptions策略函数中通过判断是否存在 vm 
+ * 就能够得知 mergeOptions 是在实例化时调用(使用 new 操作符走 _init 方法)
+ * 还是在继承时调用(Vue.extend)，而子组件的实现方式就是通过实例化子类完成的，
+ * 子类又是通过 Vue.extend 创造出来的，所以我们就能通过对 vm 的判断而得知
+ * 是否是子组件了。
  */
 export function mergeOptions ( 
   parent: Object,
@@ -423,33 +485,33 @@ export function mergeOptions (
   }
 
   normalizeProps(child, vm) //规范化props
-/**
-* Ensure all props option syntax are normalized into the
-* Object-based format.
-* eg:
-* props: ["someData"]
-* props: {
-  someData:{
-    type: null
+/*
+  * Ensure all props option syntax are normalized into the
+  * Object-based format.
+  * eg:
+  * props: ["someData"]
+  * props: {
+    someData:{
+      type: null
+    }
   }
-}
-* props: {
-  someData1: Number,
-  someData2: {
-    type: String,
-    default: ''
-  }
-}
-props: {
-  someData1: {
-    type: Number
-  },
-someData2: {
-    type: String,
+  * props: {
+    someData1: Number,
+    someData2: {
+      type: String,
       default: ''
+    }
   }
-}
-规范化props
+  props: {
+    someData1: {
+      type: Number
+    },
+  someData2: {
+      type: String,
+        default: ''
+    }
+  }
+  规范化props
 */
   normalizeInject(child, vm)
 /*
@@ -493,7 +555,6 @@ inject: {
       update:function(){ console.log('v-test2')}
     }
   }
-
 */
   // Apply extends and mixins on the child options,
   // but only if it is a raw options object that isn't
@@ -519,7 +580,7 @@ eg: var CompA = { ... }
       }
     }
   /*
-et: var mixin = {
+eg: var mixin = {
       created: function () { console.log(1) }
     }
     var vm = new Vue({
