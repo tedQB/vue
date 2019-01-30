@@ -15,7 +15,11 @@ const idToTemplate = cached(id => {
 })
 
 const mount = Vue.prototype.$mount
-//重写Vue mount原型方法
+
+/*
+  重写$mount方法，处理$mount方法
+  不存在render情况下，存在template的情况
+*/
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
@@ -32,6 +36,13 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  /*
+    解决不存在render情况下， 这种情况
+    Vue({
+        id:'el',
+        template:'<tag></tag>'
+    })
+  */
   if (!options.render) {
     let template = options.template
     if (template) {
@@ -88,7 +99,18 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  //解决存在render情况，因为一开始就保存了Vue.prototype.$mount
+  //这里的$mount是platforms/web/runtime/index.js 
+  //说明上面js先执行，后面entry-runtime-with-compiler.js后执行。
   return mount.call(this, el, hydrating)
+  /* eg:
+   Vue.component('tb-heading', {
+      render:function(createElement){
+        return createElement('a',{ });
+      }
+
+   })
+  */
 }
 
 /**

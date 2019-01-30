@@ -137,7 +137,10 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 }
-
+/*
+  mountComponent做了哪些事情？
+  
+*/
 export function mountComponent (
   vm: Component,
   el: ?Element,
@@ -145,6 +148,7 @@ export function mountComponent (
 ): Component {
   vm.$el = el
   if (!vm.$options.render) {
+    //如果不存在Vue render,把render赋值给一个空vnode对象
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
@@ -164,6 +168,7 @@ export function mountComponent (
       }
     }
   }
+  //触发beforeMount生命周期钩子
   callHook(vm, 'beforeMount')
 
   let updateComponent
